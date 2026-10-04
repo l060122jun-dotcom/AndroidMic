@@ -7,6 +7,7 @@ import android.media.AudioFormat
 import android.media.AudioRecord
 import android.util.Log
 import androidx.core.content.ContextCompat
+import io.github.teamclouday.androidMic.R
 import io.github.teamclouday.androidMic.domain.service.AudioPacket
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -33,10 +34,16 @@ class MicAudioManager(
 
     companion object {
         const val RECORD_DELAY_MS = 100L
+
+        // Target size of each captured read block, in milliseconds. Smaller blocks
+        // forward audio to the transport sooner (lower end-to-end latency) at the
+        // cost of more read calls. 10 ms is a good balance for wired (USB/ADB) links.
+        const val READ_CHUNK_MS = 10
     }
 
     private val recorder: AudioRecord
     private val bufferSize: Int
+    private val readChunkBytes: Int
     private val buffer: ByteArray
     private val bufferFloat: FloatArray
     private val bufferFloatConvert: ByteBuffer
@@ -47,7 +54,7 @@ class MicAudioManager(
     init {
         // check microphone
         require(ctx.packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)) {
-            "Microphone is not detected on this device"
+            ctx.getString(R.string.error_mic_not_detected)
         }
         require(
             ContextCompat.checkSelfPermission(
@@ -55,21 +62,39 @@ class MicAudioManager(
                 Manifest.permission.RECORD_AUDIO
             ) == PackageManager.PERMISSION_GRANTED
         ) {
-            "Microphone recording is not permitted"
+            ctx.getString(R.string.error_mic_not_permitted)
         }
 
         // get minimum buffer size
         val channelConfig =
             if (channelCount == 2) AudioFormat.CHANNEL_IN_STEREO else AudioFormat.CHANNEL_IN_MONO
-        bufferSize = AudioRecord.getMinBufferSize(
+        val minBufferSize = AudioRecord.getMinBufferSize(
             sampleRate,
             channelConfig,
             audioFormat,
         )
 
-        require(bufferSize != AudioRecord.ERROR && bufferSize != AudioRecord.ERROR_BAD_VALUE) {
-            "Microphone buffer size ($bufferSize) is invalid\nAudio format is likely not supported"
+        require(minBufferSize != AudioRecord.ERROR && minBufferSize != AudioRecord.ERROR_BAD_VALUE) {
+            ctx.getString(R.string.error_mic_buffer_invalid, minBufferSize)
         }
+
+        // Low-latency tuning:
+        // - keep the AudioRecord internal buffer at least the platform minimum, but
+        //   grow it to ~2 read chunks so a single read never starves the hardware.
+        // - read in ~10 ms chunks so we forward audio to the transport with minimal
+        //   batching latency, independent of the (possibly much larger) internal buffer.
+        val bytesPerSample = when (audioFormat) {
+            AudioFormat.ENCODING_PCM_8BIT -> 1
+            AudioFormat.ENCODING_PCM_FLOAT, AudioFormat.ENCODING_PCM_32BIT -> 4
+            AudioFormat.ENCODING_PCM_24BIT_PACKED -> 3
+            else -> 2 // 16-bit default
+        }
+        val bytesPerFrame = bytesPerSample * channelCount
+        val targetReadBytes = sampleRate * bytesPerFrame * READ_CHUNK_MS / 1000
+        readChunkBytes = maxOf(targetReadBytes, bytesPerFrame)
+        // Do not aggressively shrink the hardware buffer below the platform minimum,
+        // but cap it so it cannot add large batching latency.
+        bufferSize = maxOf(minBufferSize, readChunkBytes * 2)
 
         // init recorder
         recorder = AudioRecord(
@@ -82,16 +107,28 @@ class MicAudioManager(
 
         // check if recorder is initialized
         require(recorder.state == AudioRecord.STATE_INITIALIZED) {
-            "Microphone recording failed to initialize"
+            ctx.getString(R.string.error_mic_init_failed)
         }
 
-        buffer = ByteArray(bufferSize)
-        bufferFloat = FloatArray(bufferSize / 4) // float is 4 bytes
-        bufferFloatConvert = ByteBuffer.allocate(bufferSize).order(ByteOrder.nativeOrder())
+        buffer = ByteArray(readChunkBytes)
+        bufferFloat = FloatArray(readChunkBytes / 4) // float is 4 bytes
+        bufferFloatConvert = ByteBuffer.allocate(readChunkBytes).order(ByteOrder.nativeOrder())
     }
 
     // audio stream publisher
     fun audioStream(): Flow<AudioPacket> = channelFlow {
+        // Low-latency capture path (best-effort): ask the platform to use the
+        // low-latency fast path. A smaller read chunk only helps if the HAL
+        // keeps up, so this is treated as a hint and never shrinks below the
+        // platform minimum buffer computed in init.
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                recorder.setPerformanceMode(android.media.AudioRecord.PERFORMANCE_MODE_LOW_LATENCY)
+            }
+        } catch (_: Throwable) {
+            // Not all devices support performance mode; ignore and use defaults.
+        }
+
         // launch in scope so infinite loop will be canceled when scope exits
         streamJob = scope.launch {
             while (true) {
@@ -114,9 +151,11 @@ class MicAudioManager(
                         recorder.read(bufferFloat, 0, bufferFloat.size, AudioRecord.READ_BLOCKING)
 
                     if (readCount > 0) {
+                        // emit exactly the valid float samples (4 bytes each), no stale tail
+                        val validBytes = readCount * 4
                         bufferFloatConvert.clear()
                         bufferFloatConvert.asFloatBuffer().put(bufferFloat, 0, readCount)
-                        packetBuffer = bufferFloatConvert.array()
+                        packetBuffer = bufferFloatConvert.array().copyOf(validBytes)
                     } else {
                         packetBuffer = ByteArray(0)
                     }

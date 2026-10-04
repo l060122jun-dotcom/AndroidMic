@@ -14,6 +14,6 @@ fun DialogMode(
         expanded,
         enum = Mode.entries,
         onClick = { vm.setMode(it) },
-        text = { it.toString() }
+        text = { it.getString() }
     )
 }

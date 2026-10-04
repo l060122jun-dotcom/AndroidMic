@@ -23,7 +23,9 @@ object DefaultStates {
 class AppPreferences(
     context: Context
 ) : PreferencesManager(context, "settings") {
-    val mode = enumPreference("mode", Mode.WIFI)
+    // Prefer the wired USB path by default: it is the lowest-latency transport
+    // (no Wi-Fi jitter / no Nagle). Users can switch back to WIFI/UDP/ADB anytime.
+    val mode = enumPreference("mode", Mode.USB)
 
     val ip = stringPreference("ip", "192.168.")
     val port = stringPreference("port", "")
@@ -58,16 +60,54 @@ enum class AudioSource {
             }
         }
     }
+
+    @Composable
+    fun getString(): String {
+        return when (this) {
+            Mic -> stringResource(R.string.audio_source_mic)
+            Recognition -> stringResource(R.string.audio_source_recognition)
+            Communication -> stringResource(R.string.audio_source_communication)
+            Performance -> stringResource(R.string.audio_source_performance)
+        }
+    }
+
+    fun getString(uiHelper: UiHelper): String {
+        return when (this) {
+            Mic -> uiHelper.getString(R.string.audio_source_mic)
+            Recognition -> uiHelper.getString(R.string.audio_source_recognition)
+            Communication -> uiHelper.getString(R.string.audio_source_communication)
+            Performance -> uiHelper.getString(R.string.audio_source_performance)
+        }
+    }
 }
 
 enum class Mode {
-    WIFI, UDP, USB, ADB
+    WIFI, UDP, USB, ADB;
+
+    @Composable
+    fun getString(): String {
+        return when (this) {
+            WIFI -> stringResource(R.string.mode_wifi)
+            UDP -> stringResource(R.string.mode_udp)
+            USB -> stringResource(R.string.mode_usb)
+            ADB -> stringResource(R.string.mode_adb)
+        }
+    }
 }
 
 enum class Themes {
     System,
     Dark,
-    Light
+    Light;
+
+    @Composable
+    fun getString(): String {
+        return when (this) {
+            System -> stringResource(R.string.theme_system)
+            Dark -> stringResource(R.string.theme_dark)
+            Light -> stringResource(R.string.theme_light)
+        }
+    }
 }
 
 enum class Dialogs {

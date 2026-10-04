@@ -77,7 +77,7 @@ fun DrawerBody(vm: MainViewModel) {
         DialogMode(vm = vm, expanded = dialogModeExpanded)
         SettingsItem(
             title = stringResource(id = R.string.drawerMode),
-            subTitle = mode.value.toString(),
+            subTitle = mode.value.getString(),
             contentDescription = "set mode",
             icon = Icons.Rounded.Settings,
             onClick = { dialogModeExpanded.value = true },
@@ -144,7 +144,7 @@ fun DrawerBody(vm: MainViewModel) {
         DialogAudioSource(vm = vm, expanded = dialogAudioSourceExpanded)
         SettingsItem(
             title = stringResource(id = R.string.audio_source),
-            subTitle = vm.prefs.audioSource.getAsState().value.toString(),
+            subTitle = vm.prefs.audioSource.getAsState().value.getString(),
             contentDescription = "set audio source",
             onClick = { dialogAudioSourceExpanded.value = true },
         )
@@ -158,7 +158,7 @@ fun DrawerBody(vm: MainViewModel) {
         DialogTheme(vm = vm, expanded = dialogThemesExpanded)
         SettingsItem(
             title = stringResource(id = R.string.drawerTheme),
-            subTitle = vm.prefs.theme.getAsState().value.toString(),
+            subTitle = vm.prefs.theme.getAsState().value.getString(),
             contentDescription = "set theme",
             icon = Icons.Rounded.DarkMode,
             onClick = { dialogThemesExpanded.value = true },

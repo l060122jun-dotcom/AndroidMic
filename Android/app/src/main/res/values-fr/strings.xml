@@ -65,4 +65,47 @@
     <string name="mute">Rendre muet</string>
     <string name="unmute">Réactiver le son</string>
 
+    <!--
+    Connection mode (Mode enum)
+    -->
+    <string name="mode_wifi">WIFI</string>
+    <string name="mode_udp">UDP</string>
+    <string name="mode_usb">USB</string>
+    <string name="mode_adb">ADB</string>
+
+    <!--
+    Theme (Themes enum)
+    -->
+    <string name="theme_system">Système</string>
+    <string name="theme_dark">Sombre</string>
+    <string name="theme_light">Clair</string>
+
+    <!--
+    Audio source (AudioSource enum)
+    -->
+    <string name="audio_source_mic">Micro</string>
+    <string name="audio_source_recognition">Reconnaissance</string>
+    <string name="audio_source_communication">Communication</string>
+    <string name="audio_source_performance">Performance</string>
+
+    <!--
+    Permission dialog
+    -->
+    <string name="permission_rationale">Nous avons besoin des autorisations demandées pour que l\'application fonctionne correctement</string>
+    <string name="permission_request_again">Demander à nouveau les autorisations</string>
+    <string name="permission_allow_manually">Autoriser manuellement</string>
+
+    <!--
+    Runtime error messages
+    -->
+    <string name="error_mic_not_detected">Aucun microphone détecté sur cet appareil</string>
+    <string name="error_mic_not_permitted">L\'enregistrement par microphone n\'est pas autorisé</string>
+    <string name="error_mic_buffer_invalid">La taille du tampon (%1$d) est invalide\nLe format audio n\'est probablement pas pris en charge</string>
+    <string name="error_mic_init_failed">Échec de l\'initialisation de l\'enregistrement</string>
+    <string name="error_no_usb_device">Aucun périphérique USB détecté</string>
+    <string name="error_bluetooth_not_permitted">Le Bluetooth n\'est pas autorisé</string>
+    <string name="error_bluetooth_disabled">L\'adaptateur Bluetooth n\'est pas activé</string>
+    <string name="error_bluetooth_no_target">Impossible de trouver le PC cible dans la liste des appareils appairés</string>
+    <string name="error_wifi_not_available">Wifi non disponible</string>
+
 </resources>

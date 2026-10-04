@@ -9,6 +9,8 @@ import android.provider.Settings
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.ui.res.stringResource
+import io.github.teamclouday.androidMic.R
 import io.github.teamclouday.androidMic.ui.MainViewModel
 import io.github.teamclouday.androidMic.ui.components.ManagerButton
 import io.github.teamclouday.androidMic.ui.home.dialog.BaseDialog
@@ -75,10 +77,10 @@ fun PermissionDialog(
         expanded
     ) {
 
-        Text("We need the requested permission for the app to function properly")
+        Text(stringResource(id = R.string.permission_rationale))
 
         ManagerButton(
-            text = "Request permissions again",
+            text = stringResource(id = R.string.permission_request_again),
             onClick = {
                 onRequestPermissionAgain()
                 expanded.value = false
@@ -86,7 +88,7 @@ fun PermissionDialog(
         )
 
         ManagerButton(
-            text = "Allow permissions manually",
+            text = stringResource(id = R.string.permission_allow_manually),
             onClick = {
                 openAppSettings()
                 expanded.value = false

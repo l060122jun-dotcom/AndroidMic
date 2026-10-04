@@ -17,6 +17,7 @@ import android.os.Messenger
 import android.util.Log
 import androidx.core.content.ContextCompat
 import com.google.protobuf.ByteString
+import io.github.teamclouday.androidMic.R
 import io.github.teamclouday.androidMic.domain.service.AudioPacket
 import io.github.teamclouday.androidMic.utils.chunked
 import io.github.teamclouday.androidMic.utils.ignore
@@ -68,7 +69,7 @@ class BluetoothStreamer(private val ctx: Context, val scope: CoroutineScope) : S
                 Manifest.permission.BLUETOOTH
             ) == PackageManager.PERMISSION_GRANTED
         ) {
-            "Bluetooth is not permitted"
+            ctx.getString(R.string.error_bluetooth_not_permitted)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             require(
@@ -77,13 +78,13 @@ class BluetoothStreamer(private val ctx: Context, val scope: CoroutineScope) : S
                     Manifest.permission.BLUETOOTH_CONNECT
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
-                "Bluetooth is not permitted"
+                ctx.getString(R.string.error_bluetooth_not_permitted)
             }
         }
-        require(adapter.isEnabled) { "Bluetooth adapter is not enabled" }
+        require(adapter.isEnabled) { ctx.getString(R.string.error_bluetooth_disabled) }
         // set target device
         selectTargetDevice()
-        require(target != null) { "Cannot find target PC in paired device list" }
+        require(target != null) { ctx.getString(R.string.error_bluetooth_no_target) }
         // set up filters
         val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED)

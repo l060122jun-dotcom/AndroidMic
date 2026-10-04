@@ -71,7 +71,7 @@ fun <E> DialogList(
     expanded: MutableState<Boolean>,
     enum: List<E>,
     onClick: (E) -> Unit,
-    text: (E) -> String,
+    text: @Composable (E) -> String,
     bottomContent: (@Composable () -> Unit)? = null
 ) {
 

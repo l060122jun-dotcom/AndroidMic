@@ -56,6 +56,6 @@ fun DialogAudioSource(
         expanded,
         enum = AudioSource.entries,
         onClick = { vm.setAudioSource(it) },
-        text = { it.toString() }
+        text = { it.getString() }
     )
 }

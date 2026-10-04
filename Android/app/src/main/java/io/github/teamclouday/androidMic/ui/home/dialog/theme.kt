@@ -18,7 +18,7 @@ fun DialogTheme(
         expanded,
         enum = Themes.entries,
         onClick = { vm.setTheme(it) },
-        text = { it.toString() }
+        text = { it.getString() }
     ) {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
             DialogDivider()

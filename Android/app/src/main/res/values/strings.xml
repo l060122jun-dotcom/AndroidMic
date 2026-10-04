@@ -4,72 +4,116 @@
     <!--
     Main UI
     -->
-    <string name="connect">Connect</string>
-    <string name="disconnect">Disconnect</string>
-    <string name="turn_audio">Mute Audio</string>
+    <string name="connect">连接</string>
+    <string name="disconnect">断开连接</string>
+    <string name="turn_audio">静音</string>
 
     <!--
     Setting
     -->
-    <string name="drawerHeader">Setting</string>
-    <string name="drawer_subtitle_connection">Connection</string>
-    <string name="drawer_subtitle_audio">Audio</string>
-    <string name="drawer_subtitle_other">Other</string>
+    <string name="drawerHeader">设置</string>
+    <string name="drawer_subtitle_connection">连接</string>
+    <string name="drawer_subtitle_audio">音频</string>
+    <string name="drawer_subtitle_other">其它</string>
 
 
-    <string name="drawerMode">Connection mode</string>
+    <string name="drawerMode">连接方式</string>
 
-    <string name="drawerIpPort">IP:PORT</string>
+    <string name="drawerIpPort">IP:端口</string>
     <string name="dialog_ip">IP</string>
-    <string name="dialog_port">PORT</string>
+    <string name="dialog_port">端口</string>
 
 
-    <string name="sample_rate">Sample Rate</string>
-    <string name="channel_count">Channel Count</string>
-    <string name="audio_format">Audio Format</string>
-    <string name="audio_source">Audio Source</string>
+    <string name="sample_rate">采样率</string>
+    <string name="channel_count">声道数</string>
+    <string name="audio_format">音频格式</string>
+    <string name="audio_source">音频来源</string>
 
-    <string name="drawerTheme">Themes</string>
-    <string name="dynamic_color">Dynamic color</string>
-    <string name="drawerVersion">Version</string>
+    <string name="drawerTheme">主题</string>
+    <string name="dynamic_color">动态取色</string>
+    <string name="drawerVersion">版本</string>
 
-    <string name="reset">Reset</string>
-    <string name="save">Save</string>
-    <string name="cancel">Cancel</string>
+    <string name="reset">重置</string>
+    <string name="save">保存</string>
+    <string name="cancel">取消</string>
 
-    <string name="mono">Mono</string>
-    <string name="stereo">Stereo</string>
+    <string name="mono">单声道</string>
+    <string name="stereo">立体声</string>
 
     <!--
     Error messages
     -->
-    <string name="invalid_ip_port">IP:PORT invalid</string>
-    <string name="invalid_port">PORT invalid</string>
+    <string name="invalid_ip_port">IP:端口 无效</string>
+    <string name="invalid_port">端口 无效</string>
 
-    <string name="error">Error\n</string>
-    <string name="failed_to_connect">Failed to connect</string>
-    <string name="stream_already_started">Stream already started</string>
-    <string name="microphone_already_started">Microphone already started</string>
-    <string name="microphone_not_recording">Microphone is not recording</string>
+    <string name="error">错误\n</string>
+    <string name="failed_to_connect">连接失败</string>
+    <string name="stream_already_started">音频流已开始</string>
+    <string name="microphone_already_started">麦克风已启动</string>
+    <string name="microphone_not_recording">麦克风未在录音</string>
 
-    <string name="connected_device">Connected Device:\n</string>
-    <string name="mic_start_recording">Microphone has started to record</string>
+    <string name="connected_device">已连接设备:\n</string>
+    <string name="mic_start_recording">麦克风已开始录音</string>
 
-    <string name="device_disconnected">Device disconnected</string>
-    <string name="recording_stopped">Recording stopped</string>
+    <string name="device_disconnected">设备已断开连接</string>
+    <string name="recording_stopped">录音已停止</string>
 
     <!--
     Service
     -->
-    <string name="notification_info">Audio stream is active</string>
+    <string name="notification_info">音频流传输中</string>
 
-    <string name="start_streaming">Start streaming</string>
-    <string name="start_recording">Start recording</string>
-    <string name="stop_streaming">Stop streaming</string>
-    <string name="stop_recording">Stop recording</string>
+    <string name="start_streaming">开始传输</string>
+    <string name="start_recording">开始录音</string>
+    <string name="stop_streaming">停止传输</string>
+    <string name="stop_recording">停止录音</string>
 
 
-    <string name="mute">Mute</string>
-    <string name="unmute">Unmute</string>
+    <string name="mute">静音</string>
+    <string name="unmute">取消静音</string>
+
+
+    <!--
+    Connection mode (Mode enum)
+    -->
+    <string name="mode_wifi">WIFI</string>
+    <string name="mode_udp">UDP</string>
+    <string name="mode_usb">USB</string>
+    <string name="mode_adb">ADB</string>
+
+    <!--
+    Theme (Themes enum)
+    -->
+    <string name="theme_system">跟随系统</string>
+    <string name="theme_dark">深色</string>
+    <string name="theme_light">浅色</string>
+
+    <!--
+    Audio source (AudioSource enum)
+    -->
+    <string name="audio_source_mic">麦克风</string>
+    <string name="audio_source_recognition">语音识别</string>
+    <string name="audio_source_communication">语音通话</string>
+    <string name="audio_source_performance">语音增强</string>
+
+    <!--
+    Permission dialog
+    -->
+    <string name="permission_rationale">应用需要以下权限才能正常工作</string>
+    <string name="permission_request_again">重新申请权限</string>
+    <string name="permission_allow_manually">手动授予权限</string>
+
+    <!--
+    Runtime error messages
+    -->
+    <string name="error_mic_not_detected">未检测到麦克风</string>
+    <string name="error_mic_not_permitted">未授予麦克风录音权限</string>
+    <string name="error_mic_buffer_invalid">麦克风缓冲区大小 (%1$d) 无效\n可能不支持该音频格式</string>
+    <string name="error_mic_init_failed">麦克风初始化失败</string>
+    <string name="error_no_usb_device">未检测到 USB 设备</string>
+    <string name="error_bluetooth_not_permitted">未授予蓝牙权限</string>
+    <string name="error_bluetooth_disabled">蓝牙未开启</string>
+    <string name="error_bluetooth_no_target">在已配对设备中找不到目标电脑</string>
+    <string name="error_wifi_not_available">WiFi 不可用</string>
 
 </resources>

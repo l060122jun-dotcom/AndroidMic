@@ -14,6 +14,7 @@ import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.os.BundleCompat
 import com.google.protobuf.ByteString
+import io.github.teamclouday.androidMic.R
 import io.github.teamclouday.androidMic.domain.service.AudioPacket
 import io.github.teamclouday.androidMic.utils.toBigEndianU32
 import kotlinx.coroutines.CoroutineScope
@@ -31,7 +32,7 @@ import java.io.FileOutputStream
 
 private const val TAG: String = "USB streamer"
 
-class UsbStreamer(ctx: Context, private val scope: CoroutineScope) : Streamer {
+class UsbStreamer(private val ctx: Context, private val scope: CoroutineScope) : Streamer {
 
     companion object {
         private const val USB_PERMISSION = "io.github.teamclouday.AndroidMic.USB_PERMISSION"
@@ -96,7 +97,7 @@ class UsbStreamer(ctx: Context, private val scope: CoroutineScope) : Streamer {
         val accessoryList = usbManager.accessoryList
 
         require(!accessoryList.isNullOrEmpty()) {
-            "No USB device detected"
+            ctx.getString(R.string.error_no_usb_device)
         }
 
         accessory = accessoryList[0]
@@ -157,9 +158,12 @@ class UsbStreamer(ctx: Context, private val scope: CoroutineScope) : Streamer {
 
             val pack = message.toByteArray()
 
-            // Write size header and message
-            outStream.write(pack.size.toBigEndianU32())
-            outStream.write(pack)
+            // Write size header and message in one call
+            val connectPrefix = pack.size.toBigEndianU32()
+            val connectFrame = ByteArray(connectPrefix.size + pack.size)
+            System.arraycopy(connectPrefix, 0, connectFrame, 0, connectPrefix.size)
+            System.arraycopy(pack, 0, connectFrame, connectPrefix.size, pack.size)
+            outStream.write(connectFrame)
             outStream.flush()
 
             Log.d(TAG, "connect: sent connect message")
@@ -260,9 +264,17 @@ class UsbStreamer(ctx: Context, private val scope: CoroutineScope) : Streamer {
 
 //                    Log.d(TAG, "usb stream: sending ${pack.size} bytes")
 
-                    outputStream!!.write(pack.size.toBigEndianU32())
-                    outputStream!!.write(pack)
-                    outputStream!!.flush()
+                    // Single write per packet: length prefix + payload in one buffer,
+                    // then one flush. Reduces per-packet syscall overhead on the wired
+                    // USB/ADB path where end-to-end latency matters most.
+                    val prefix = pack.size.toBigEndianU32()
+                    val outByteArray = ByteArray(prefix.size + pack.size)
+                    System.arraycopy(prefix, 0, outByteArray, 0, prefix.size)
+                    System.arraycopy(pack, 0, outByteArray, prefix.size, pack.size)
+
+                    val out = outputStream!!
+                    out.write(outByteArray)
+                    out.flush()
                 } catch (e: Exception) {
                     Log.d(TAG, "stream: ${e.message}")
                 }
@@ -271,7 +283,7 @@ class UsbStreamer(ctx: Context, private val scope: CoroutineScope) : Streamer {
     }
 
     override fun getInfo(): String {
-        if (accessory == null) return "No USB device detected"
+        if (accessory == null) return ctx.getString(R.string.error_no_usb_device)
         return "[USB Accessory Model]:${accessory?.model}\n[Manufacturer]:${accessory?.manufacturer}\n[Version]:${accessory?.version}"
     }
 
