@@ -107,7 +107,15 @@ fn get_audio_devices(audio_host: &Host) -> Vec<AudioDevice> {
         .collect()
 }
 
-const SHARED_BUF_SIZE_S: f32 = 1.; // 0.15s
+/// Capacity of the shared producer/consumer ring buffer, in seconds of audio.
+///
+/// This is *capacity*, not latency: as long as the consumer (cpal callback)
+/// keeps up with the producer, the queue stays near empty. But the capacity
+/// also caps how much stale audio can pile up before the "drop" warnings kick
+/// in. The playback callback independently trims backlog above ~20 ms to avoid
+/// replaying stale audio after scheduling stalls. Capacity remains 0.25 s to
+/// accommodate burst arrival without requiring a large permanent latency.
+const SHARED_BUF_SIZE_S: f32 = 0.25;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ConnectionState {

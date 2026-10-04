@@ -9,7 +9,15 @@ pub struct ResamplerCache {
     result: Vec<Vec<f32>>,
 }
 
-const CHUNK_SIZE: usize = 1024;
+/// Processing block size of the FFT resampler, in input frames.
+///
+/// Every call drains as many whole blocks as are available and keeps the
+/// leftovers in `unprocessed_buffer`, so this value only sets the *residual*
+/// buffering latency (up to one block) and the per-call CPU overhead. A smaller
+/// block lowers latency; too small a block wastes CPU. 512 frames is ~10.7 ms
+/// at 48 kHz and ~11.6 ms at 44.1 kHz. Actual internal delay depends on the
+/// selected resampler and sample-rate ratio; these numbers are not total delay.
+const CHUNK_SIZE: usize = 512;
 
 pub fn resample_f32_stream_owned(
     data: &[Vec<f32>],

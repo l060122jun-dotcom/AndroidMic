@@ -92,6 +92,14 @@ impl StreamerTrait for TcpStreamer {
                 let (mut stream, addr) =
                     listener.accept().await.map_err(ConnectError::CantAccept)?;
 
+                // Audio packets are small and latency sensitive. Disable Nagle's
+                // algorithm so the OS does not hold them back to coalesce with
+                // later writes (this matters most when the ADB reverse proxy or a
+                // real network is in the path, not just plain loopback).
+                if let Err(e) = stream.set_nodelay(true) {
+                    warn!("failed to set TCP_NODELAY: {e}");
+                }
+
                 let mut buf1 = [0u8; CHECK_1.len()];
 
                 stream

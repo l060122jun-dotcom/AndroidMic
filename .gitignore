@@ -4,3 +4,7 @@ release/*
 .trae
 .DS_Store
 .env
+artifacts/
+iOS/build/
+iOS/dist/
+iOS/*.xcodeproj/

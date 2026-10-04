@@ -69,9 +69,14 @@ pub fn create_audio_stream(
     Ok((stream, config))
 }
 
-fn preferred_buffer_size(supported_config: &cpal::SupportedStreamConfigRange) -> cpal::BufferSize {
-    const PREFERRED_FRAMES: u32 = 256;
+/// Target size of the cpal output callback buffer, in frames.
+///
+/// Request 128 frames (~2.7 ms at 48 kHz), clamped to the reported range.
+/// Backend buffering and scheduling still affect latency and underrun risk;
+/// being inside the supported range is not a real-time performance guarantee.
+const PREFERRED_FRAMES: u32 = 128;
 
+fn preferred_buffer_size(supported_config: &cpal::SupportedStreamConfigRange) -> cpal::BufferSize {
     if let cpal::SupportedBufferSize::Range { min, max } = supported_config.buffer_size() {
         return cpal::BufferSize::Fixed(PREFERRED_FRAMES.clamp(*min, *max));
     }
@@ -145,15 +150,32 @@ where
     let frame_size = std::mem::size_of::<F>();
     let channels = config.channels as usize;
     let frame_bytes = frame_size * channels;
+    // Keep fresh audio after a scheduling stall instead of playing up to the
+    // full ring capacity of stale speech. Only the consumer advances its head.
+    let backlog_limit = (config.sample_rate as usize / 50).max(1) * frame_bytes;
 
     device.build_output_stream(
         config,
         move |data: &mut [F], _| {
+            trim_stale_audio(&mut consumer, backlog_limit, frame_bytes);
             process_audio(data, &mut consumer, frame_bytes);
         },
         |err| error!("an error occurred on audio stream: {err}"),
         None,
     )
+}
+
+fn trim_stale_audio(consumer: &mut Consumer<u8>, limit: usize, frame_bytes: usize) {
+    if frame_bytes == 0 {
+        return;
+    }
+    let excess = consumer.slots().saturating_sub(limit);
+    let discard = excess - excess % frame_bytes;
+    if discard > 0 {
+        if let Ok(chunk) = consumer.read_chunk(discard) {
+            chunk.commit_all();
+        }
+    }
 }
 
 #[cfg(test)]
@@ -188,5 +210,17 @@ mod tests {
         process_audio(&mut output, &mut consumer, std::mem::size_of::<i16>());
 
         assert_eq!(output, [1000, -2000, 0, 0]);
+    }
+
+    #[test]
+    fn backlog_trim_keeps_newest_complete_frames() {
+        let (mut producer, mut consumer) = RingBuffer::<u8>::new(32);
+        producer
+            .write_all(&i16_samples_to_bytes(&[1, 2, 3, 4, 5, 6]))
+            .unwrap();
+        trim_stale_audio(&mut consumer, 8, 4);
+        let mut output = [0_i16; 4];
+        process_audio(&mut output, &mut consumer, 4);
+        assert_eq!(output, [3, 4, 5, 6]);
     }
 }
