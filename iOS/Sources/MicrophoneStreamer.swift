@@ -13,6 +13,7 @@ final class MicrophoneStreamer: ObservableObject {
     private var pendingPackets = 0
     private let sendSlots = DispatchSemaphore(value: 3)
     private var attempt: UUID?
+    private var transportAttempt: UUID?
     private var interruptionObserver: NSObjectProtocol?
 
     init() {
@@ -52,7 +53,7 @@ final class MicrophoneStreamer: ObservableObject {
                     return
                 }
                 self.status = "正在连接电脑…"
-                self.queue.async { self.connect(host: host, port: endpointPort) }
+                self.queue.async { self.connect(host: host, port: endpointPort, id: id) }
             }
         }
     }
@@ -64,8 +65,9 @@ final class MicrophoneStreamer: ObservableObject {
         queue.async { self.shutdown() }
     }
 
-    private func connect(host: String, port: NWEndpoint.Port) {
+    private func connect(host: String, port: NWEndpoint.Port, id: UUID) {
         shutdown()
+        transportAttempt = id
         let tcpOptions = NWProtocolTCP.Options()
         tcpOptions.noDelay = true
         let parameters = NWParameters(tls: nil, tcp: tcpOptions)
@@ -198,11 +200,21 @@ final class MicrophoneStreamer: ObservableObject {
     }
 
     private func fail(_ message: String) {
+        let id = transportAttempt
         shutdown()
-        DispatchQueue.main.async { self.isRunning = false; self.status = "失败：\(message)" }
+        DispatchQueue.main.async {
+            guard self.attempt == id else { return }
+            self.attempt = nil
+            self.isRunning = false
+            self.status = "失败：\(message)"
+        }
     }
 
     private func publish(_ message: String) {
-        DispatchQueue.main.async { self.status = message }
+        let id = transportAttempt
+        DispatchQueue.main.async {
+            guard self.attempt == id else { return }
+            self.status = message
+        }
     }
 }
