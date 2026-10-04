@@ -1,0 +1,54 @@
+name: Chinese Android and unsigned iOS
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - name: Build Chinese APK
+        working-directory: Android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AndroidMic-Chinese-APK
+          path: Android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate Xcode project
+        working-directory: iOS
+        run: |
+          brew install xcodegen
+          xcodegen generate
+      - name: Build unsigned device application
+        working-directory: iOS
+        run: |
+          set -o pipefail
+          xcodebuild -project AndroidMicIOS.xcodeproj -scheme AndroidMicIOS -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build | tee build.log
+      - name: Package unsigned IPA
+        working-directory: iOS
+        run: |
+          mkdir -p dist/Payload
+          cp -R build/Build/Products/Release-iphoneos/AndroidMicIOS.app dist/Payload/
+          cd dist
+          zip -qr AndroidMic-iOS-unsigned.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AndroidMic-iOS-unsigned-IPA
+          path: iOS/dist/AndroidMic-iOS-unsigned.ipa
+          if-no-files-found: error

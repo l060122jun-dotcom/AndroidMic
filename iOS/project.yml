@@ -1,0 +1,30 @@
+name: AndroidMicIOS
+options:
+  bundleIdPrefix: io.github.l060122jun
+  deploymentTarget:
+    iOS: "15.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    CODE_SIGNING_ALLOWED: NO
+    CODE_SIGNING_REQUIRED: NO
+targets:
+  AndroidMicIOS:
+    type: application
+    platform: iOS
+    sources: [Sources]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.l060122jun.androidmic.ios
+        TARGETED_DEVICE_FAMILY: "1,2"
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: 1
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: 手机麦克风
+        NSMicrophoneUsageDescription: 采集麦克风声音，通过局域网传送到您指定的电脑。
+        NSLocalNetworkUsageDescription: 连接局域网中的 AndroidMic 电脑客户端并传输音频。
+        UIBackgroundModes: [audio]
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
