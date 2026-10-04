@@ -7,15 +7,36 @@ permissions:
   contents: read
 
 jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install protobuf compiler
+        run: choco install protoc -y --no-progress
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: RustApp -> target
+      - name: Test and build low-latency desktop client
+        working-directory: RustApp
+        run: |
+          cargo test --lib
+          cargo build --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AndroidMic-Windows-low-latency
+          path: RustApp/target/release/android-mic.exe
+          if-no-files-found: error
   android:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
       - name: Build Chinese APK
         working-directory: Android
         run: |
@@ -35,6 +56,11 @@ jobs:
         run: |
           brew install xcodegen
           xcodegen generate
+      - name: Test TCP packet encoder
+        working-directory: iOS
+        run: |
+          swiftc Sources/AudioPacketEncoder.swift Tests/main.swift -o /tmp/androidmic-protocol-test
+          /tmp/androidmic-protocol-test
       - name: Build unsigned device application
         working-directory: iOS
         run: |
