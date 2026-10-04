@@ -61,6 +61,11 @@ jobs:
         run: |
           swiftc Sources/AudioPacketEncoder.swift Tests/main.swift -o /tmp/androidmic-protocol-test
           /tmp/androidmic-protocol-test
+      - name: Test SPSC audio ring
+        working-directory: iOS
+        run: |
+          clang -std=c11 -O2 -Wall -Wextra -pthread Sources/AudioRingBuffer.c Tests/ring_test.c -o /tmp/androidmic-ring-test
+          /tmp/androidmic-ring-test
       - name: Build unsigned device application
         working-directory: iOS
         run: |
